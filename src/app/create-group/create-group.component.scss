@@ -1,0 +1,17 @@
+.user-selection-container{
+    display:flex;
+    flex-direction: column;
+}
+
+.select-user{
+    display: flex;
+}
+
+form{
+    display: flex;
+    flex-direction: column;
+}
+
+button[type='submit']{
+    align-self: center;
+}

@@ -1,0 +1,15 @@
+<div class="receiver-container">
+    <div class="button-container">
+        <button type="button" class="btn btn-primary" (click)="createGroup()">Create Group</button>
+    </div>
+    <ng-container *ngFor="let user of usersList">
+       <div class="receiver" (click)="showChatScreen(user.username,false,user.firstName)">
+          <span class="boldText">{{user.username|upperCase}}</span> <i class="bi bi-lightbulb" [ngClass]="user.isOnline ? 'online':'notonline'"></i>
+       </div>
+    </ng-container>
+    <ng-container *ngFor="let group of groupList">
+      <div class="receiver" (click)="showChatScreen(group.groupId,true,group.groupName)">
+         <span class="boldText">{{group.groupName|upperCase}}</span>
+      </div>
+   </ng-container>
+</div>

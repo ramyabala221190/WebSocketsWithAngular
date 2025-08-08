@@ -1,0 +1,27 @@
+
+<div class="modal-header">
+  Create New Group
+</div>
+
+<div class="modal-body">
+    <ng-container *ngIf="groupCreateForm">
+        <form class="form-group" [formGroup]="groupCreateForm" (ngSubmit)="createNewGroup()">
+            <div class="form-floating mb-3">
+                <input type="text" formControlName="groupName" class="form-control" id="floatingInput">
+                <label for="floatingDropdown">Group Name:</label>
+            </div>
+            <div formArrayName="users" class="user-selection-container">
+              <label>Select Users</label>
+                 <div *ngFor="let userControl of userGroupListControls;let j=index;" [formGroupName]="j" class="select-user">
+                     <input type="checkbox" formControlName="selected">{{userControl?.get('username')?.value}}
+                 </div>
+            </div>
+            <button class="btn btn-primary" type="submit" [disabled]="groupCreateForm.invalid">Create</button>
+         </form>
+    </ng-container>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="close()">Close</button>
+  </div>
+

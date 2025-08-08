@@ -1,0 +1,19 @@
+{
+    "/wsconn": {
+      "target": "ws://localhost:8087",
+      "secure": false,
+      "ws":true,
+      "logLevel":"debug",
+      "pathRewrite": {
+        "^/wsconn": ""
+      }
+    },
+    "/http":{
+      "target": "http://localhost:8088",
+      "secure": false,
+      "logLevel":"debug",
+      "pathRewrite": {
+        "^/http": ""
+      }
+    }
+  }

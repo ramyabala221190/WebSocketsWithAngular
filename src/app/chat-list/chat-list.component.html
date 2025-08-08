@@ -1,0 +1,18 @@
+<div class="chat-container">
+    <div class="receiver-container">
+            <i (click)="back()" class="bi bi-arrow-left-circle-fill"></i> <span class="boldText">Send To : {{receiverName}}</span>
+    </div>
+    <div class="message-container">
+        <div *ngFor="let message of messages" class="message" [ngClass]="message.sender == sender ? 'myMessage':'otherMessage'">
+             <span class="senderLabel">{{message.sender == sender ? 'You' : message.sender}}</span>
+            <span>{{message.content}}</span>
+            <span class="timestamp">{{message.timestamp|date:'MMM d, y, h:mm:ss a'}}
+                <i *ngIf="message.sender == sender" [ngClass]="!message.deliveredToAll ? 'bi bi-check':'bi bi-check2-all'"></i>
+            </span>
+        </div>
+    </div>
+    <div class="bottom-bar">
+        <input class="form-control" type="text" placeholder="Type your message here" [(ngModel)]="message"><button class="btn btn-primary" (click)="sendMessage()">Send</button>
+    </div>
+   
+</div>

@@ -1,0 +1,24 @@
+<div class="row">
+   <div class="col-md-6">
+    <div class="login-container" *ngIf="userSelectionForm">
+
+        <form class="form-group" [formGroup]="userSelectionForm" (ngSubmit)="login()">
+            <ng-container formArrayName="users">
+    
+                <div class="form-floating mb-3">
+                    <select (change)="selectUser($event)" class="form-control" id="floatingInput">
+                        <option [value]="''"></option>
+                        <ng-container *ngFor="let userControl of userControls;let j=index;" [formGroupName]="j">
+                            <option class="boldText" [value]="userControl?.get('username')?.value"><span>{{userControl?.get('username')?.value|upperCase}} <i class="bi bi-lightbulb" [ngClass]="userControl?.get('isOnline')?.value ? 'online':'notonline'"></i></span></option>
+                        </ng-container>
+                     </select>
+                    <label for="floatingDropdown">Username</label>
+                  </div>
+            </ng-container>
+            <button class="btn btn-primary" type="submit" [disabled]="userSelectionForm?.invalid">Login</button>
+         </form>
+         
+    </div>
+   </div>
+</div>
+

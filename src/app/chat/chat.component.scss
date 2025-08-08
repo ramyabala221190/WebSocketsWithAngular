@@ -1,0 +1,26 @@
+.parent-chat-container{
+border: 1px solid black;
+width: 40vw;
+height: 100%;
+border-radius: 5px;
+background-color: antiquewhite;
+display:flex;
+flex-direction: column;
+
+.chat-header{
+    border-bottom:1px solid black
+}
+
+.chat-body{
+   position:relative;
+   min-height:80vh
+}
+
+.chat-header{
+    display:flex;
+    justify-content: space-between;
+    min-height: 5vh;
+}
+
+
+}
