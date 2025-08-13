@@ -1,0 +1,21 @@
+.user-selection-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.select-user {
+  display: flex;
+}
+
+.modal-header {
+  display: flex;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+button[type=submit] {
+  align-self: center;
+}/*# sourceMappingURL=create-group.component.css.map */

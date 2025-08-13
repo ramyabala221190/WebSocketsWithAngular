@@ -3,6 +3,8 @@ import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { User, Group, Login } from '../models/chat.model';
 import { ChatSocketService } from '../services/chat-socket.service';
 import { BsModalRef } from 'ngx-bootstrap/modal';
+import { HttpService } from '../services/http.service';
+import { EMPTY, Observable, Subject, catchError, takeUntil, tap } from 'rxjs';
 
 interface UserGroupModel{
   firstName:string,lastName:string,username:string,isOnline:boolean,selected?:boolean
@@ -17,10 +19,11 @@ interface UserGroupModel{
 export class CreateGroupComponent {
 
   constructor(private fb:FormBuilder,private bsModalRef:BsModalRef,
-  private chatSocketService:ChatSocketService){}
+  private chatSocketService:ChatSocketService,private httpService:HttpService){}
 
   groupCreateForm?:FormGroup;
-  usersList:User[]=[]
+  usersList:User[]=[];
+  private destroy$=new Subject<boolean>();
 
   get userGroupListControls(){
     return (<FormArray>this.groupCreateForm?.get('users')).controls;
@@ -59,12 +62,36 @@ createNewGroup(){
     return acc;
    },[])
 
+   this.httpService.createNewGroup(this.groupCreateForm?.get('groupName')?.value,selectedUsers).pipe(
+    tap((result:{newGroup:Group})=>{
+      this.chatSocketService.createNewGroup({groupId:result.newGroup.groupId})
+    }),
+    this.handleError().bind(this)
+   ).subscribe();
   
-  this.chatSocketService.createNewGroup({groupName:this.groupCreateForm?.get('groupName')?.value,users: selectedUsers})
+  }
+
+
+handleError(){
+  let that=this;
+  return function(observable:Observable<any>){
+    return observable.pipe(
+      catchError((err)=>{
+        console.log(err);
+        return EMPTY;
+      }),
+      takeUntil(that.destroy$)
+    )
+  }
 }
 
 close(){
   this.bsModalRef.hide();
+}
+
+ngOnDestroy(){
+  this.destroy$.next(true);
+  this.destroy$.complete();
 }
 
 }

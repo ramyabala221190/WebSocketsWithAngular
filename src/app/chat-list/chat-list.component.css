@@ -1,0 +1,69 @@
+.message-container {
+  overflow-y: auto;
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.senderLabel {
+  align-self: flex-end;
+  font-weight: bold;
+}
+
+i.bi-arrow-left-circle-fill {
+  cursor: pointer;
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 83vh;
+}
+
+.bottom-bar {
+  display: flex;
+  border-top: 1px solid black;
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+}
+
+.receiver-container {
+  text-align: center;
+  border-bottom: 1px solid black;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.myMessage {
+  align-self: flex-start;
+  background-color: greenyellow;
+}
+
+.otherMessage {
+  align-self: flex-end;
+  background-color: aqua;
+}
+
+.timestamp {
+  font-style: italic;
+  align-self: flex-end;
+}
+.timestamp i.bi-check2-all {
+  color: darkgreen;
+}
+.timestamp i.bi-check {
+  color: darkblue;
+}
+
+.message {
+  width: 50%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  border: 1px solid violet;
+  word-break: break-all;
+}/*# sourceMappingURL=chat-list.component.css.map */

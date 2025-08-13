@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Login, Message } from '../models/chat.model';
+import { Group, Login, Message, User } from '../models/chat.model';
 
 @Injectable({
   providedIn: 'root'
@@ -29,6 +29,10 @@ export class HttpService {
 
   isUserLoggedIn(){
     return this.http.get(`${environment.httpbackendUrl}/loggedIn`,{observe:'response'});
+  }
+
+  createNewGroup(groupName:string,users:User[]):Observable<{newGroup:Group}>{
+    return this.http.post<{newGroup:Group}>(`${environment.httpbackendUrl}/group`,{groupName:groupName,users:users})
   }
 
   

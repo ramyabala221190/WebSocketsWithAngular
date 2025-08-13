@@ -3,7 +3,7 @@ import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpService } from '../services/http.service';
 import { Login, User } from '../models/chat.model';
 import { ChatSocketService } from '../services/chat-socket.service';
-import { Observable, Subject, takeUntil, tap } from 'rxjs';
+import { EMPTY, Observable, Subject, catchError, takeUntil, tap } from 'rxjs';
 import { ChatDisplayService } from '../services/chat-display.service';
 import { Router } from '@angular/router';
 
@@ -31,7 +31,7 @@ export class LoginComponent {
       selected:this.fb.control("",[Validators.required]) 
       })
    
-     this.httpService.getUsers().pipe(takeUntil(this.destroy$)).subscribe((result:Partial<Login>)=>{
+     this.httpService.getUsers().pipe(this.handleError().bind(this)).subscribe((result:Partial<Login>)=>{
        if(result.users){
        this.usersList=result.users;
        this.userSelectionForm?.setControl('users',this.fb.array(this.usersList.map(x=>this.createUserGroup(x))))
@@ -41,12 +41,25 @@ export class LoginComponent {
   }
 
   login(){
-    this.chatService.login(this.userSelectionForm?.get('selected')?.value).pipe(takeUntil(this.destroy$)).subscribe(
+    this.chatService.login(this.userSelectionForm?.get('selected')?.value).pipe(this.handleError().bind(this)).subscribe(
       result=>{
         this.router.navigate(['chat']);
       }
     );
  }
+
+ handleError(){
+  let that=this;
+  return function(observable:Observable<any>){
+    return observable.pipe(
+      catchError((err)=>{
+        console.log(err);
+        return EMPTY;
+      }),
+      takeUntil(that.destroy$)
+    )
+  }
+}
 
 
  selectUser(evt:any){

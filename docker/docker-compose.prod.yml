@@ -1,0 +1,15 @@
+services:
+   ws-frontend:
+     build:
+      args:  #these args are available during build time
+        - targetEnv=prod
+     env_file: environments/prod.env
+     container_name: ws-frontend-prod-container
+     image: ws-frontend-prod-nginx
+     ports:
+       - 8083:3004
+     volumes:
+       - C:/Users/User/certificates/angular/private.key:/etc/nginx/ssl/private.key
+       - C:/Users/User/certificates/angular/selfSigned.crt:/etc/nginx/ssl/selfSigned.crt
+       - C:/Users/User/certificates/angular/passphrase.txt:/etc/nginx/ssl/passphrase.txt
+       - ../nginx/nginx-prod.config:/etc/nginx/templates/default.conf.template

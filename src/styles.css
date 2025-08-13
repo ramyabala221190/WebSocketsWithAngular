@@ -1,0 +1,12 @@
+/* You can add global styles to this file, and also import other style files */
+.boldText {
+  font-weight: bold;
+}
+
+.online {
+  background-color: green;
+}
+
+.notonline {
+  background-color: red;
+}/*# sourceMappingURL=styles.css.map */

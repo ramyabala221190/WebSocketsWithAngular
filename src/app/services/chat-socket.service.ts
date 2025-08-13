@@ -6,6 +6,7 @@ import { ChatDisplayService } from './chat-display.service';
 import { HttpService } from './http.service';
 import { HttpResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -55,7 +56,7 @@ export class ChatSocketService {
   }
 
 
-  createNewGroup(payload:CreateGroup){
+  createNewGroup(payload:{groupId:string}){
     this.socket?.emit('createGroup',payload,(ack:MessageAck)=>{
       console.log(ack);
     });
@@ -98,7 +99,7 @@ export class ChatSocketService {
 
   startWSConnection(token:string|null){
     if(token !== null && !this.connectionWithServerExists()){
-    this.socket=io(`ws://localhost:8087/chat`,{
+    this.socket=io(`${environment.wsbackendUrl}`,{
       query:{
         token:token
       }

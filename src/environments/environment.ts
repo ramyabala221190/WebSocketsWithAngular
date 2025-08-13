@@ -1,5 +1,5 @@
 export const environment = {
-    wsbackendUrl:"/wsconn",
-    httpbackendUrl:"/http"
+    wsbackendUrl:"/chat",
+    httpbackendUrl:"/web"
 };
 

@@ -1,0 +1,36 @@
+.count {
+  font-weight: bold;
+  color: red;
+}
+
+.category-container, .container {
+  display: flex;
+}
+
+.category-selection-container, .send-message-container, .message-receive-container {
+  width: 33%;
+}
+
+.message {
+  margin-bottom: 10px;
+}
+
+.send-message-container, .category-selection-container, .item-list-container, .message-receive-container, .room-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-list-container span {
+  font-weight: bold;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+form button, form input[type=text] {
+  align-self: flex-start;
+}
+form label {
+  font-family: bold;
+}/*# sourceMappingURL=app.component.css.map */

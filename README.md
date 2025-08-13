@@ -8,7 +8,245 @@ Another reason for using being, we have used socket-io package for the Express s
 
 npm install --save socket.io-client
 
+
+Generating certificates in C:/Users/User/certificates/angular
+
+The passphrase.txt contains the passphrase for private.key and config.ext is manually created.
+
+openssl genrsa -des3 -out private.key 2048
+
+openssl req -key private.key -new -out certSignReq.csr
+
+openssl x509 -signkey private.key -extfile config.ext -in certSignReq.csr -req -days 365 -out selfSigned.crt
+
 --------------------------------------------------------------------------------------------------
+## Starting application
+
+Locally, execute "npm run start"
+
+
+For Docker, execute the below commands for build and run
+Observe the -p flag. This helps to differentiate the angular and node projects so that there
+is no conflict when running the images. When a docker image is run, it is run under a project name, which by defaut
+is the folder name under which docker-compose file is present. 
+In both projects, it is docker. So only the node or angular project containers can run. One of them will get removed, when the
+other starts.
+So its essential to add -p flag
+
+
+For development:
+```
+
+docker compose -p ws-dev-angular -f docker/docker-compose.yml -f docker/docker-compose.dev.yml build
+docker compose -p ws-dev-angular -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up -d --remove-orphans --no-build
+
+```
+
+For production:
+
+```
+docker compose -p ws-prod-angular -f docker/docker-compose.yml -f docker/docker-compose.prod.yml build
+docker compose -p ws-prod-angular -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d --remove-orphans --no-build
+
+```
+
+----------------------------------------------------------------------------------------------------
+### Structure
+
+The architecture diagram is in assets/arch.png
+
+Local Working
+
+As per the environment files and proxy.conf.json, we will be routing all
+/web/* requests to localhost:8091 and all /chat requests(which ultimately becomes /socket.io/ request) will be routed to localhost:8092.
+
+In the chat socket service, we are referencing /chat from environment file
+
+```
+ this.socket=io(`${environment.wsbackendUrl}`,{
+      query:{
+        token:token
+      }
+    });
+
+```
+
+In the http.service.ts file, we are referencing /web again from environement.ts file
+
+Deployment using Docker Compose
+
+We are deploying the angular application to nginx webserver in a Docker container.
+Nginx will function as a webserver to serve static files and also proxying requests to the backend node express server.
+
+We have development and prodution version of the angular app.
+
+Observe the docker-compose.dev.yml.
+8082 is the host port and 3000 is the container port.
+When you hit angularws-dev:8082 in the browser, the request is forwarded to the nginx webserver listening on port 3000
+in the docker container. The nginx webserver is serving the angular app in the docker container.
+We have set up a volume for the nginx-dev.config instead of doing a COPY in the Dockerfile.
+The advantage here is that if I update the nginx-dev.config in the source code, I just need to restart the docker container
+to make the changes reflect.
+If I do a COPY in the Dockerfile, for any changes in the nginx-dev.config to reflect, we have to redo the docker build and 
+run the container.
+
+```
+services:
+   ws-frontend:
+     build:
+      args:  #these args are available during build time
+           - targetEnv=dev
+     env_file: environments/dev.env
+     container_name: ws-frontend-dev-container
+     image: ws-frontend-dev-nginx
+     ports:
+       - 8082:3000
+     volumes:
+       - ../nginx/nginx-dev.config:/etc/nginx/templates/default.conf.template
+
+```
+
+Moving to nginx-dev.config.
+
+The below 2 variables will be read from dev.env and common.env. The nginx webserver will be listening on port 3000
+and the server name will be angularws-dev
+
+```
+listen ${CLIENT_NGINX_PORT};
+server_name ${SERVER_NAME};
+
+```
+
+All /web/ requests will be routed to ws-backend-nginx docker service, which is nothing but a nginx server listening on port 3002
+All /socket.io/ requests will be routed to the same ws-backend-nginx docker service on port
+3002. So the docker service and port remains the same. What changes is the path after it.
+Based on whether it is /web or /socket.io, the ws-backend-nginx docker service will decide
+to which server to route it to i.e to the server listening for web requests or listening for
+socket.io requests
+
+```
+   location /web/{
+            proxy_pass http://${BACKEND_NGINX_NAME}:${BACKEND_NGINX_PORT}/web/;
+        }
+
+        location /socket.io/{
+            proxy_pass http://${BACKEND_NGINX_NAME}:${BACKEND_NGINX_PORT}/socket.io/;
+        }
+
+
+```
+
+Lets now check the docker-compose.prod.yml
+The nginx server is listening on port 3004 and the angular app is listening on port 8083.
+Thus https://angularws-prod:8083, forwards the request to the nginx server listening on port 3004.
+
+```
+services:
+   ws-frontend:
+     build:
+      args:  #these args are available during build time
+        - targetEnv=prod
+     env_file: environments/prod.env
+     container_name: ws-frontend-prod-container
+     image: ws-frontend-prod-nginx
+     ports:
+       - 8083:3004
+     volumes:
+       - C:/Users/User/certificates/angular/private.key:/etc/nginx/ssl/private.key
+       - C:/Users/User/certificates/angular/selfSigned.crt:/etc/nginx/ssl/selfSigned.crt
+       - C:/Users/User/certificates/angular/passphrase.txt:/etc/nginx/ssl/passphrase.txt
+       - ../nginx/nginx-prod.config:/etc/nginx/templates/default.conf.template
+
+```
+
+Moving to nginx-prod.config. Nginx web server in production environment is listening on port 3004 and the server name is angularws-prod.
+The purpose of the Strict-Transport-Security header ensures that requests to all resources are made on https.
+
+```  
+    server{
+    listen ${CLIENT_NGINX_PORT} ssl;
+    server_name ${SERVER_NAME};
+    default_type application/octet-stream;
+    error_log /var/log/nginx/error.log debug;
+    ssl_certificate /etc/nginx/ssl/selfSigned.crt;
+    ssl_certificate_key /etc/nginx/ssl/private.key;
+    ssl_password_file /etc/nginx/ssl/passphrase.txt;
+
+
+    gzip                    on;
+    gzip_comp_level         6;
+    gzip_vary               on;
+    gzip_min_length         1000;
+    gzip_proxied            any;
+    gzip_types              text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+    gzip_buffers            16 8k;
+    client_max_body_size    256M;
+
+    add_header 'Strict-Transport-Security' 'max-age=63072000; includeSubDomains; preload'; ## to ensure there are no insecure requests
+
+    root /usr/share/nginx/html;
+
+
+        location /web/{
+            proxy_pass https://${BACKEND_NGINX_NAME}:${BACKEND_NGINX_PORT}/web/;
+        }
+
+        location /socket.io/{
+            proxy_pass https://${BACKEND_NGINX_NAME}:${BACKEND_NGINX_PORT}/socket.io/;
+        }
+
+        location /assets/ {
+         autoindex on;
+        }
+
+        location / {
+        try_files $uri $uri/ $uri/index.html =404;
+        }
+        error_page  404              /index.html;
+    }
+
+```
+
+
+All /web/ requests will be routed to ws-backend-nginx docker service, which is nothing but a nginx server listening on port 9000
+All /socket.io/ requests will be routed to the same ws-backend-nginx docker service on port
+9000. So the docker service and port remains the same. What changes is the path after it.
+Based on whether it is /web or /socket.io, the ws-backend-nginx docker service will decide
+to which server to route it to i.e to the server listening for web requests or listening for
+socket.io requests.
+
+-----------------------------------------------------------------------------------------------------
+
+## Docker Networking
+
+The Angular app and the Node app are on different networks: ws-front_app_network and ws-back_app_network respectively.
+
+In order for the angular app, to communicate with the Node app, the former must also be a part of the ws-back_app_network
+and vice-versa.
+
+In the docker-compose.yml, we have defined all the networks. We have defined each network under a name.
+So ws-front_app_network is defined under a name:mynetwork and ws-back_app_network is defined under a name: backend.
+Since ws-back_app_network is an external network to connect to, we have set "external" to true.
+
+
+```
+networks:
+  mynetwork:
+    name: ws-front_app_network
+    driver: bridge
+  backend:
+    name: ws-back_app_network
+    external: true
+  
+```
+
+Where have we used there names ? We have assigned the networks to each service as below:
+
+ networks:
+      - mynetwork
+      - backend
+
+-------------------------------------------------------------------------------------------------------
 
 ## Steps
 
@@ -19,9 +257,6 @@ Local and session storage subjected to XSS attacks. Not safe to store token.
 With jwt, there should be no option to log out because we cannot invalidate this token. Its a stateless token.
 As long as it is valid, it can be reused to authenticate to the server, hence must be stored safely.
 Hence no logout functionality in application.
-
-proxy.conf.json not working with ws connections. So I have manually written the localhost and port in service file.
-
 
 
 1. The user logs in via the LoginComponent. Below is the login() in the ChatSocketService. 
@@ -54,8 +289,10 @@ We are passing the token to the node server so that
 it can link the socket connection with the particular user.
 In the expressJs server, we are validating the token,decoding it, extracting the username to link it with the socket id.
 
-Note that the WS server and the http server are running on different ports: 8087 and 8088 respectively.
-All Http requests will be made to server on port 8088 and all WS requests will be made to server on pot 8087.
+If running locally, the proxy.conf.json is used. If using docker, the proxy mapping happens in nginx config.
+
+Note that the WS server and the http server are running on different ports: 8091 and 8092 respectively.
+All Http requests will be made to server on port 8091 and all WS requests will be made to server on port 8092.
 On the same browser tab, we dont want multiple socket connections for the same user. So its necessary to check if the socket instance
 (created using io()) is
 active or not before creating a new connection.
@@ -65,7 +302,7 @@ you can have different connections for the same user.
 ```
  startWSConnection(token:string|null){
     if(token !== null && !this.connectionWithServerExists()){
-    this.socket=io(`ws://localhost:8087/chat`,{
+    this.socket=io(`${environment.wsbackendUrl}`,{
       query:{
         token:token
       }
@@ -125,11 +362,11 @@ Within the chat namespace, we are allocating 1 room per user on the server side.
 Also we have 1 room per group of users.
 
 You can test the connection to the WS server on cmd using
-curl "http://localhost:8087/socket.io/?EIO=4&transport=polling"
+curl "http://localhost:8092/socket.io/?EIO=4&transport=polling"
 
 
 It should return an output similar to this:
-C:\Users\User>curl "http://localhost:8087/socket.io/?EIO=4&transport=polling"
+C:\Users\User>curl "http://localhost:8092/socket.io/?EIO=4&transport=polling"
 0{"sid":"zg_M22WHxNFzTm2mAAAI","upgrades":["websocket"],"pingInterval":25000,"pingTimeout":20000,"maxPayload":1000000}
 C:\Users\User>
 

@@ -1,0 +1,12 @@
+services:
+   ws-frontend:
+     build:
+      args:  #these args are available during build time
+           - targetEnv=dev
+     env_file: environments/dev.env
+     container_name: ws-frontend-dev-container
+     image: ws-frontend-dev-nginx
+     ports:
+       - 8082:3000
+     volumes:
+       - ../nginx/nginx-dev.config:/etc/nginx/templates/default.conf.template

@@ -1,0 +1,21 @@
+.parent-chat-container {
+  border: 1px solid black;
+  width: 40vw;
+  height: 100%;
+  border-radius: 5px;
+  background-color: antiquewhite;
+  display: flex;
+  flex-direction: column;
+}
+.parent-chat-container .chat-header {
+  border-bottom: 1px solid black;
+}
+.parent-chat-container .chat-body {
+  position: relative;
+  min-height: 80vh;
+}
+.parent-chat-container .chat-header {
+  display: flex;
+  justify-content: space-between;
+  min-height: 5vh;
+}/*# sourceMappingURL=chat.component.css.map */

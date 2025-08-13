@@ -1,0 +1,19 @@
+services:
+   ws-frontend:
+     restart: always
+     env_file: environments/common.env
+     build:
+       context: ../
+       dockerfile: docker/Dockerfile
+     networks:
+      - mynetwork
+      - backend
+
+networks:
+  mynetwork:
+    name: ws-front_app_network
+    driver: bridge
+  backend:
+    name: ws-back_app_network
+    external: true
+  

@@ -6,7 +6,7 @@ import { ChatSocketService } from '../services/chat-socket.service';
 import { HttpService } from '../services/http.service';
 import { BsModalRef, BsModalService, ModalOptions } from 'ngx-bootstrap/modal';
 import { CreateGroupComponent } from '../create-group/create-group.component';
-import { Subject, takeUntil } from 'rxjs';
+import { EMPTY, Observable, Subject, catchError, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'chat-receiver-list',
@@ -32,7 +32,7 @@ export class ChatReceiverListComponent {
     
 
      //update the online status of users and users inside the group
-     this.chatSocketService.getOnlineStatus().pipe(takeUntil(this.destroy$)).subscribe(result=>{
+     this.chatSocketService.getOnlineStatus().pipe(this.handleError().bind(this)).subscribe(result=>{
       if(result.username && result.username.length){
         let userIndex=this.usersList.findIndex(x=>x.username == result.username);
         if(userIndex !== -1){
@@ -49,7 +49,7 @@ export class ChatReceiverListComponent {
         }
       })
 
-    this.chatSocketService.getGroupCreatedStatus().pipe(takeUntil(this.destroy$)).subscribe((result:boolean)=>{
+    this.chatSocketService.getGroupCreatedStatus().pipe(this.handleError().bind(this)).subscribe((result:boolean)=>{
         if(result){
           this.bsModalRef.hide();
           console.log("groups added..refresh list")
@@ -62,6 +62,20 @@ export class ChatReceiverListComponent {
       
   }
 
+  handleError(){
+    let that=this;
+    return function(observable:Observable<any>){
+      return observable.pipe(
+        catchError((err)=>{
+          console.log(err);
+          return EMPTY;
+        }),
+        takeUntil(that.destroy$)
+      )
+    }
+  }
+  
+
   createGroup(){
     const initialState: ModalOptions = {
       initialState: {
@@ -73,7 +87,7 @@ export class ChatReceiverListComponent {
 
   fetchUsersAndGroups(){
     if(this.sender !== null){
-    this.httpService.getUsersAndGroups(this.sender).pipe(takeUntil(this.destroy$)).subscribe((result:Login)=>{
+    this.httpService.getUsersAndGroups(this.sender).pipe(this.handleError().bind(this)).subscribe((result:Login)=>{
       this.sender=this.chatDisplayService.getSenderUser();
       this.userListForGroup=result.users;
       this.usersList=result.users.filter(x=>x.username !== this.sender);

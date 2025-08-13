@@ -16,7 +16,7 @@ export interface Message{
 
 export interface Group{
     groupName:string,
-    groupId:number,
+    groupId:string,
     users:User[],
     messages:Message[],
     createdAt:Date

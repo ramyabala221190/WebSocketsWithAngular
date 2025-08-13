@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { Observable, Subject, catchError, mergeMap, of, takeUntil, tap } from 'rxjs';
+import { EMPTY, Observable, Subject, catchError, mergeMap, of, takeUntil, tap } from 'rxjs';
 import { Message, MessageList } from '../models/chat.model';
 import { ChatSocketService } from '../services/chat-socket.service';
 import { HttpService } from '../services/http.service';
@@ -27,7 +27,7 @@ export class ChatListComponent {
    ngOnInit(){
     this.sender=this.chatDisplayService.getSenderUser();
 
-    this.chatService.getMessageDeliveryUpdates().pipe(takeUntil(this.destroy$)).subscribe((result:Message|null)=>{
+    this.chatService.getMessageDeliveryUpdates().pipe(     this.handleError().bind(this)    ).subscribe((result:Message|null)=>{
       if(result !== null){
         this.chatDisplayService.updateDeliveryStatus(result.messageId,result.deliveredToAll);
         let messages=this.chatDisplayService.getMessages();
@@ -35,7 +35,8 @@ export class ChatListComponent {
       }
     })
 
-    this.chatService.receiveMessages().pipe(takeUntil(this.destroy$)).subscribe((result:Message|null)=>{
+    this.chatService.receiveMessages().pipe(     this.handleError().bind(this)
+    ).subscribe((result:Message|null)=>{
       if(result !== null){
       this.appendNewMessage(result);
       }
@@ -59,8 +60,21 @@ export class ChatListComponent {
          }
          return of(null);
      }),
-     takeUntil(this.destroy$)
+     this.handleError().bind(this)
    ).subscribe();
+    }
+
+    handleError(){
+      let that=this;
+      return function(observable:Observable<any>){
+        return observable.pipe(
+          catchError((err)=>{
+            console.log(err);
+            return EMPTY;
+          }),
+          takeUntil(that.destroy$)
+        )
+      }
     }
 
     back(){
